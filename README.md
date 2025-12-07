@@ -1,6 +1,6 @@
 # 🎴 PKMC
 
-PKMC (Pokémon Card Management Collection) is a catalog system for managing Pokémon trading card products. Built with Go, SQLite, and GORM, it uses clean architecture principles to organize booster displays, ETBs, bundles, and other card products across different extensions, languages, and release blocks.
+`PKMC` (Pokémon Collection) is a catalog system for managing Pokémon trading card products. Built with `Go`, `SQLite`, and `GORM`, it uses clean architecture principles to organize booster displays, ETBs, bundles, and other card products across different extensions, languages, and release blocks.
 
 > **Note:** This is a personal educational project and is subject to frequent changes as I continue learning and experimenting with Go and software architecture patterns.
 
