@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -30,9 +31,13 @@ func main() {
 		log.Fatalf("Failed to seed database: %v", err)
 	}
 
+	// Create context with 30 seconds timeout
+	ctx, cancel := context.WithTimeout(context.Background(), container.Config.GetDefaultTimeout())
+	defer cancel()
+
 	// Example: Create an item using the service
 	price := 129.99
-	item, err := container.ItemService.CreateItem("DRI", "fr", "Display", &price)
+	item, err := container.ItemService.CreateItem(ctx, "DRI", "fr", "Display", &price)
 	if err != nil {
 		log.Fatalf("Failed to create item: %v", err)
 	}
