@@ -141,6 +141,7 @@ clean:
 	@rm -rf $(BIN_DIR)
 	@rm -rf $(REPORTS_DIR)
 	@rm -f *.db
+	@$(GO) clean -testcache
 	@echo -e "$(GREEN)✅ Cleaned$(NC)"
 
 run: build
