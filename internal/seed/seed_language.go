@@ -1,8 +1,6 @@
 package seed
 
 import (
-	"log"
-
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"gorm.io/gorm"
 )
@@ -23,7 +21,6 @@ func SeedLanguages(db *gorm.DB) error {
 				if err := db.Create(&l).Error; err != nil {
 					return err
 				}
-				log.Printf("Seed: created language '%s'\n", l.Name)
 			} else {
 				return err
 			}

@@ -1,7 +1,6 @@
 package seed
 
 import (
-	"log"
 	"time"
 
 	"github.com/R4yL-dev/pkmc/internal/models"
@@ -23,7 +22,6 @@ func SeedBlocks(db *gorm.DB) error {
 				if err := db.Create(&b).Error; err != nil {
 					return err
 				}
-				log.Printf("Seed: created block '%s'\n", b.Name)
 			} else {
 				return err
 			}

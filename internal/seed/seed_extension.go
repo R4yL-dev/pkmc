@@ -1,7 +1,6 @@
 package seed
 
 import (
-	"log"
 	"time"
 
 	"github.com/R4yL-dev/pkmc/internal/models"
@@ -72,7 +71,6 @@ func SeedExtension(db *gorm.DB) error {
 				if err := db.Create(&e).Error; err != nil {
 					return err
 				}
-				log.Printf("Seed: created extension '%s'\n", e.Name)
 			} else {
 				return err
 			}

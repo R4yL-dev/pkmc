@@ -1,8 +1,6 @@
 package seed
 
 import (
-	"log"
-
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"gorm.io/gorm"
 )
@@ -24,7 +22,6 @@ func SeedItemTypes(db *gorm.DB) error {
 				if err := db.Create(&t).Error; err != nil {
 					return err
 				}
-				log.Printf("Seed: created item type '%s'\n", t.Name)
 			} else {
 				return err
 			}
