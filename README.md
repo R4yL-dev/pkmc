@@ -50,11 +50,11 @@ func main() {
     container.DB.AutoMigrate(models.GetModels()...)
     seed.Seed(container.DB)
 
-    // Create an item: French Display for Destinées Radieuses (DRI) extension
+    // Create an item: French Display for Rivalités Destinées (DRI) extension
     ctx, cancel := context.WithTimeout(context.Background(), container.Config.GetDefaultTimeout())
     defer cancel()
 
-    price := 129.99
+    price := 180
     item, err := container.ItemService.CreateItem(ctx, "DRI", "fr", "Display", &price)
     if err != nil {
         log.Fatalf("Failed to create item: %v", err)
