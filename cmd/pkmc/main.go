@@ -4,43 +4,43 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/R4yL-dev/pkmc/internal/app"
 	"github.com/R4yL-dev/pkmc/internal/config"
-	"github.com/R4yL-dev/pkmc/internal/database"
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"github.com/R4yL-dev/pkmc/internal/seed"
-	"github.com/R4yL-dev/pkmc/internal/service"
 )
 
 func main() {
-	cfg := config.Get()
+	config.Load()
 
-	db, err := database.InitDB(cfg.GetDBPath())
+	// Initialize dependency injection container
+	container, err := app.NewContainer()
 	if err != nil {
-		log.Fatal("error initializing database:", err)
+		log.Fatalf("Failed to initialize container: %v", err)
 	}
-	defer func() {
-		if err := database.CloseDB(); err != nil {
-			log.Fatal("error closing database:", err)
-		}
-	}()
+	defer container.Close()
 
-	if err := db.AutoMigrate(models.GetModels()...); err != nil {
-		log.Fatal("error migrating database:", err)
+	// Auto-migrate database models
+	if err := container.DB.AutoMigrate(models.GetModels()...); err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
-	if err := seed.Seed(db); err != nil {
-		log.Fatal("error seeding database:", err)
-	}
+	// Seed reference data
+	seed.Seed(container.DB)
 
-	itemService := service.NewItemService(db)
-
-	price := 259.95
-	item, err := itemService.CreateItem("DRI", "fr", "Display", &price)
+	// Example: Create an item using the service
+	price := 129.99
+	item, err := container.ItemService.CreateItem("DRI", "fr", "Display", &price)
 	if err != nil {
-		log.Fatal("error creating item:", err)
+		log.Fatalf("Failed to create item: %v", err)
 	}
-	fmt.Printf("Created item: %+v\n", item)
-	fmt.Printf("  Extension: %+v\n", item.Extension)
-	fmt.Printf("  Type: %+v\n", item.Type)
-	fmt.Printf("  Language: %+v\n", item.Language)
+
+	fmt.Printf("✅ Item created successfully!\n")
+	fmt.Printf("   ID: %d\n", item.ID)
+	fmt.Printf("   Extension: %s (%s)\n", item.Extension.Name, item.Extension.Code)
+	fmt.Printf("   Type: %s\n", item.Type.Name)
+	fmt.Printf("   Language: %s\n", item.Language.Name)
+	if item.Price != nil {
+		fmt.Printf("   Price: %.2f€\n", *item.Price)
+	}
 }
