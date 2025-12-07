@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"github.com/R4yL-dev/pkmc/internal/testutil"
@@ -97,9 +99,10 @@ func TestLanguageRepository_FindByCode(t *testing.T) {
 			defer testutil.CleanupTestDB(t, db)
 
 			repo := NewLanguageRepository(db)
+			ctx := context.Background()
 
 			// Execute
-			lang, err := repo.FindByCode(tt.code)
+			lang, err := repo.FindByCode(ctx, tt.code)
 
 			// Assert
 			if tt.expectedError {
@@ -113,6 +116,28 @@ func TestLanguageRepository_FindByCode(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLanguageRepository_FindByCode_WithTimeout(t *testing.T) {
+	// Setup
+	db := testutil.SetupTestDB(t)
+	defer testutil.CleanupTestDB(t, db)
+
+	repo := NewLanguageRepository(db)
+
+	// Create a context with very short timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
+	defer cancel()
+
+	// Wait to ensure timeout
+	time.Sleep(2 * time.Millisecond)
+
+	// Execute
+	_, err := repo.FindByCode(ctx, "fr")
+
+	// Assert - should fail with context deadline exceeded
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "context deadline exceeded")
 }
 
 func TestLanguageRepository_CustomLanguage(t *testing.T) {
@@ -130,9 +155,10 @@ func TestLanguageRepository_CustomLanguage(t *testing.T) {
 	assert.NoError(t, err)
 
 	repo := NewLanguageRepository(db)
+	ctx := context.Background()
 
 	// Find custom language
-	found, err := repo.FindByCode("it")
+	found, err := repo.FindByCode(ctx, "it")
 	assert.NoError(t, err)
 	assert.NotNil(t, found)
 	testutil.AssertLanguageEqual(t, customLang, found)

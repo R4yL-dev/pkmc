@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"github.com/R4yL-dev/pkmc/internal/testutil"
@@ -79,9 +81,10 @@ func TestExtensionRepository_FindByCode(t *testing.T) {
 			defer testutil.CleanupTestDB(t, db)
 
 			repo := NewExtensionRepository(db)
+			ctx := context.Background()
 
 			// Execute
-			ext, err := repo.FindByCode(tt.code)
+			ext, err := repo.FindByCode(ctx, tt.code)
 
 			// Assert
 			if tt.expectedError {
@@ -95,6 +98,28 @@ func TestExtensionRepository_FindByCode(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestExtensionRepository_FindByCode_WithTimeout(t *testing.T) {
+	// Setup
+	db := testutil.SetupTestDB(t)
+	defer testutil.CleanupTestDB(t, db)
+
+	repo := NewExtensionRepository(db)
+
+	// Create a context with very short timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
+	defer cancel()
+
+	// Wait to ensure timeout
+	time.Sleep(2 * time.Millisecond)
+
+	// Execute
+	_, err := repo.FindByCode(ctx, "DRI")
+
+	// Assert - should fail with context deadline exceeded
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "context deadline exceeded")
 }
 
 func TestExtensionRepository_CustomExtension(t *testing.T) {
@@ -112,9 +137,10 @@ func TestExtensionRepository_CustomExtension(t *testing.T) {
 	assert.NoError(t, err)
 
 	repo := NewExtensionRepository(db)
+	ctx := context.Background()
 
 	// Find custom extension
-	found, err := repo.FindByCode("CUSTOM")
+	found, err := repo.FindByCode(ctx, "CUSTOM")
 	assert.NoError(t, err)
 	assert.NotNil(t, found)
 	testutil.AssertExtensionEqual(t, customExt, found)

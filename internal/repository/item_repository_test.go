@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"github.com/R4yL-dev/pkmc/internal/testutil"
@@ -112,9 +114,10 @@ func TestItemRepository_Create(t *testing.T) {
 			defer testutil.CleanupTestDB(t, db)
 
 			repo := NewItemRepository(db)
+			ctx := context.Background()
 
 			// Execute
-			err := repo.Create(tt.item)
+			err := repo.Create(ctx, tt.item)
 
 			// Assert
 			if tt.expectedError {
@@ -130,6 +133,35 @@ func TestItemRepository_Create(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestItemRepository_Create_WithTimeout(t *testing.T) {
+	// Setup
+	db := testutil.SetupTestDB(t)
+	defer testutil.CleanupTestDB(t, db)
+
+	repo := NewItemRepository(db)
+
+	// Create a context with very short timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
+	defer cancel()
+
+	// Wait to ensure timeout
+	time.Sleep(2 * time.Millisecond)
+
+	item := &models.Item{
+		ExtensionID: 1,
+		TypeID:      1,
+		LanguageID:  1,
+		Price:       testutil.FloatPtr(99.99),
+	}
+
+	// Execute
+	err := repo.Create(ctx, item)
+
+	// Assert - should fail with context deadline exceeded
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "context deadline exceeded")
 }
 
 func TestItemRepository_FindByID(t *testing.T) {
@@ -218,6 +250,7 @@ func TestItemRepository_FindByID(t *testing.T) {
 			defer testutil.CleanupTestDB(t, db)
 
 			repo := NewItemRepository(db)
+			ctx := context.Background()
 
 			var itemID uint
 			if tt.setup != nil {
@@ -227,7 +260,7 @@ func TestItemRepository_FindByID(t *testing.T) {
 			}
 
 			// Execute
-			item, err := repo.FindByID(itemID)
+			item, err := repo.FindByID(ctx, itemID)
 
 			// Assert
 			if tt.expectedError {
@@ -243,12 +276,44 @@ func TestItemRepository_FindByID(t *testing.T) {
 	}
 }
 
+func TestItemRepository_FindByID_WithTimeout(t *testing.T) {
+	// Setup
+	db := testutil.SetupTestDB(t)
+	defer testutil.CleanupTestDB(t, db)
+
+	repo := NewItemRepository(db)
+
+	// Create an item first
+	item := &models.Item{
+		ExtensionID: 1,
+		TypeID:      1,
+		LanguageID:  1,
+		Price:       testutil.FloatPtr(99.99),
+	}
+	db.Create(item)
+
+	// Create a context with very short timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
+	defer cancel()
+
+	// Wait to ensure timeout
+	time.Sleep(2 * time.Millisecond)
+
+	// Execute
+	_, err := repo.FindByID(ctx, item.ID)
+
+	// Assert - should fail with context deadline exceeded
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "context deadline exceeded")
+}
+
 func TestItemRepository_MultipleItems(t *testing.T) {
 	// Setup
 	db := testutil.SetupTestDB(t)
 	defer testutil.CleanupTestDB(t, db)
 
 	repo := NewItemRepository(db)
+	ctx := context.Background()
 
 	// Create multiple items
 	items := []*models.Item{
@@ -258,14 +323,14 @@ func TestItemRepository_MultipleItems(t *testing.T) {
 	}
 
 	for i, item := range items {
-		err := repo.Create(item)
+		err := repo.Create(ctx, item)
 		require.NoError(t, err, "Failed to create item %d", i)
 		assert.NotZero(t, item.ID)
 	}
 
 	// Verify all items can be retrieved
 	for i, item := range items {
-		retrieved, err := repo.FindByID(item.ID)
+		retrieved, err := repo.FindByID(ctx, item.ID)
 		require.NoError(t, err, "Failed to find item %d", i)
 		assert.Equal(t, item.ID, retrieved.ID)
 		testutil.AssertItemEqual(t, item, retrieved)

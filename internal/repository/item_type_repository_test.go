@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"github.com/R4yL-dev/pkmc/internal/testutil"
@@ -103,9 +105,10 @@ func TestItemTypeRepository_FindByName(t *testing.T) {
 			defer testutil.CleanupTestDB(t, db)
 
 			repo := NewItemTypeRepository(db)
+			ctx := context.Background()
 
 			// Execute
-			itemType, err := repo.FindByName(tt.typeName)
+			itemType, err := repo.FindByName(ctx, tt.typeName)
 
 			// Assert
 			if tt.expectedError {
@@ -119,6 +122,28 @@ func TestItemTypeRepository_FindByName(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestItemTypeRepository_FindByName_WithTimeout(t *testing.T) {
+	// Setup
+	db := testutil.SetupTestDB(t)
+	defer testutil.CleanupTestDB(t, db)
+
+	repo := NewItemTypeRepository(db)
+
+	// Create a context with very short timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
+	defer cancel()
+
+	// Wait to ensure timeout
+	time.Sleep(2 * time.Millisecond)
+
+	// Execute
+	_, err := repo.FindByName(ctx, "ETB")
+
+	// Assert - should fail with context deadline exceeded
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "context deadline exceeded")
 }
 
 func TestItemTypeRepository_CustomItemType(t *testing.T) {
@@ -135,9 +160,10 @@ func TestItemTypeRepository_CustomItemType(t *testing.T) {
 	assert.NoError(t, err)
 
 	repo := NewItemTypeRepository(db)
+	ctx := context.Background()
 
 	// Find custom item type
-	found, err := repo.FindByName("Custom Type")
+	found, err := repo.FindByName(ctx, "Custom Type")
 	assert.NoError(t, err)
 	assert.NotNil(t, found)
 	testutil.AssertItemTypeEqual(t, customType, found)

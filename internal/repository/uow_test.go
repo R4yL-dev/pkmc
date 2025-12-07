@@ -1,8 +1,10 @@
 package repository
 
 import (
+	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"github.com/R4yL-dev/pkmc/internal/testutil"
@@ -16,10 +18,11 @@ func TestUnitOfWork_DoCommit(t *testing.T) {
 	defer testutil.CleanupTestDB(t, db)
 
 	uow := NewUnitOfWork(db)
+	ctx := context.Background()
 
 	// Execute - successful transaction
 	var createdItemID uint
-	err := uow.Do(func(uow UnitOfWork) error {
+	err := uow.Do(ctx, func(uow UnitOfWork) error {
 		item := &models.Item{
 			ExtensionID: 1,
 			TypeID:      1,
@@ -27,7 +30,7 @@ func TestUnitOfWork_DoCommit(t *testing.T) {
 			Price:       testutil.FloatPtr(99.99),
 		}
 
-		err := uow.Items().Create(item)
+		err := uow.Items().Create(ctx, item)
 		if err != nil {
 			return err
 		}
@@ -53,10 +56,11 @@ func TestUnitOfWork_DoRollback(t *testing.T) {
 	defer testutil.CleanupTestDB(t, db)
 
 	uow := NewUnitOfWork(db)
+	ctx := context.Background()
 
 	// Execute - failing transaction
 	var attemptedItemID uint
-	err := uow.Do(func(uow UnitOfWork) error {
+	err := uow.Do(ctx, func(uow UnitOfWork) error {
 		item := &models.Item{
 			ExtensionID: 1,
 			TypeID:      1,
@@ -64,7 +68,7 @@ func TestUnitOfWork_DoRollback(t *testing.T) {
 			Price:       testutil.FloatPtr(99.99),
 		}
 
-		err := uow.Items().Create(item)
+		err := uow.Items().Create(ctx, item)
 		if err != nil {
 			return err
 		}
@@ -86,16 +90,47 @@ func TestUnitOfWork_DoRollback(t *testing.T) {
 	assert.Error(t, err, "Item should not exist after rollback")
 }
 
-func TestUnitOfWork_MultipleOperations(t *testing.T) {
+func TestUnitOfWork_Do_WithTimeout(t *testing.T) {
 	// Setup
 	db := testutil.SetupTestDB(t)
 	defer testutil.CleanupTestDB(t, db)
 
 	uow := NewUnitOfWork(db)
 
+	// Create a context with very short timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
+	defer cancel()
+
+	// Wait to ensure timeout
+	time.Sleep(2 * time.Millisecond)
+
+	// Execute
+	err := uow.Do(ctx, func(uow UnitOfWork) error {
+		item := &models.Item{
+			ExtensionID: 1,
+			TypeID:      1,
+			LanguageID:  1,
+			Price:       testutil.FloatPtr(99.99),
+		}
+		return uow.Items().Create(ctx, item)
+	})
+
+	// Assert - should fail with context deadline exceeded
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "context deadline exceeded")
+}
+
+func TestUnitOfWork_MultipleOperations(t *testing.T) {
+	// Setup
+	db := testutil.SetupTestDB(t)
+	defer testutil.CleanupTestDB(t, db)
+
+	uow := NewUnitOfWork(db)
+	ctx := context.Background()
+
 	// Execute - multiple operations in single transaction
 	var item1ID, item2ID uint
-	err := uow.Do(func(uow UnitOfWork) error {
+	err := uow.Do(ctx, func(uow UnitOfWork) error {
 		// Create first item
 		item1 := &models.Item{
 			ExtensionID: 1,
@@ -103,7 +138,7 @@ func TestUnitOfWork_MultipleOperations(t *testing.T) {
 			LanguageID:  1,
 			Price:       testutil.FloatPtr(99.99),
 		}
-		if err := uow.Items().Create(item1); err != nil {
+		if err := uow.Items().Create(ctx, item1); err != nil {
 			return err
 		}
 		item1ID = item1.ID
@@ -115,7 +150,7 @@ func TestUnitOfWork_MultipleOperations(t *testing.T) {
 			LanguageID:  2,
 			Price:       testutil.FloatPtr(149.99),
 		}
-		if err := uow.Items().Create(item2); err != nil {
+		if err := uow.Items().Create(ctx, item2); err != nil {
 			return err
 		}
 		item2ID = item2.ID
@@ -142,10 +177,11 @@ func TestUnitOfWork_RollbackMultipleOperations(t *testing.T) {
 	defer testutil.CleanupTestDB(t, db)
 
 	uow := NewUnitOfWork(db)
+	ctx := context.Background()
 
 	// Execute - multiple operations with failure
 	var item1ID, item2ID uint
-	err := uow.Do(func(uow UnitOfWork) error {
+	err := uow.Do(ctx, func(uow UnitOfWork) error {
 		// Create first item (should succeed)
 		item1 := &models.Item{
 			ExtensionID: 1,
@@ -153,7 +189,7 @@ func TestUnitOfWork_RollbackMultipleOperations(t *testing.T) {
 			LanguageID:  1,
 			Price:       testutil.FloatPtr(99.99),
 		}
-		if err := uow.Items().Create(item1); err != nil {
+		if err := uow.Items().Create(ctx, item1); err != nil {
 			return err
 		}
 		item1ID = item1.ID
@@ -165,7 +201,7 @@ func TestUnitOfWork_RollbackMultipleOperations(t *testing.T) {
 			LanguageID:  2,
 			Price:       testutil.FloatPtr(149.99),
 		}
-		if err := uow.Items().Create(item2); err != nil {
+		if err := uow.Items().Create(ctx, item2); err != nil {
 			return err
 		}
 		item2ID = item2.ID
@@ -191,9 +227,10 @@ func TestUnitOfWork_RepositoryAccess(t *testing.T) {
 	defer testutil.CleanupTestDB(t, db)
 
 	uow := NewUnitOfWork(db)
+	ctx := context.Background()
 
 	// Test all repository accessors
-	err := uow.Do(func(uow UnitOfWork) error {
+	err := uow.Do(ctx, func(uow UnitOfWork) error {
 		// Verify all repositories are accessible
 		assert.NotNil(t, uow.Items())
 		assert.NotNil(t, uow.Extensions())
@@ -201,15 +238,15 @@ func TestUnitOfWork_RepositoryAccess(t *testing.T) {
 		assert.NotNil(t, uow.ItemTypes())
 
 		// Test actual usage
-		ext, err := uow.Extensions().FindByCode("DRI")
+		ext, err := uow.Extensions().FindByCode(ctx, "DRI")
 		require.NoError(t, err)
 		assert.NotNil(t, ext)
 
-		lang, err := uow.Languages().FindByCode("fr")
+		lang, err := uow.Languages().FindByCode(ctx, "fr")
 		require.NoError(t, err)
 		assert.NotNil(t, lang)
 
-		itemType, err := uow.ItemTypes().FindByName("Display")
+		itemType, err := uow.ItemTypes().FindByName(ctx, "Display")
 		require.NoError(t, err)
 		assert.NotNil(t, itemType)
 
@@ -225,9 +262,10 @@ func TestUnitOfWork_NestedTransactionBehavior(t *testing.T) {
 	defer testutil.CleanupTestDB(t, db)
 
 	uow := NewUnitOfWork(db)
+	ctx := context.Background()
 
 	// Test that inner error propagates correctly
-	err := uow.Do(func(uow UnitOfWork) error {
+	err := uow.Do(ctx, func(uow UnitOfWork) error {
 		// First operation succeeds
 		item1 := &models.Item{
 			ExtensionID: 1,
@@ -235,7 +273,7 @@ func TestUnitOfWork_NestedTransactionBehavior(t *testing.T) {
 			LanguageID:  1,
 			Price:       testutil.FloatPtr(99.99),
 		}
-		if err := uow.Items().Create(item1); err != nil {
+		if err := uow.Items().Create(ctx, item1); err != nil {
 			return err
 		}
 
@@ -246,7 +284,7 @@ func TestUnitOfWork_NestedTransactionBehavior(t *testing.T) {
 			LanguageID:  1,
 			Price:       testutil.FloatPtr(99.99),
 		}
-		if err := uow.Items().Create(item2); err != nil {
+		if err := uow.Items().Create(ctx, item2); err != nil {
 			return err // Should trigger rollback
 		}
 
