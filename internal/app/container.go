@@ -35,5 +35,5 @@ func NewContainer() (*Container, error) {
 }
 
 func (c *Container) Close() error {
-	return database.CloseDB()
+	return database.CloseDB(c.DB)
 }
