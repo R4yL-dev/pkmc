@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	models "github.com/R4yL-dev/pkmc/internal/models"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -20,9 +22,9 @@ func (_m *MockExtensionRepository) EXPECT() *MockExtensionRepository_Expecter {
 	return &MockExtensionRepository_Expecter{mock: &_m.Mock}
 }
 
-// FindByCode provides a mock function with given fields: code
-func (_m *MockExtensionRepository) FindByCode(code string) (*models.Extension, error) {
-	ret := _m.Called(code)
+// FindByCode provides a mock function with given fields: ctx, code
+func (_m *MockExtensionRepository) FindByCode(ctx context.Context, code string) (*models.Extension, error) {
+	ret := _m.Called(ctx, code)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindByCode")
@@ -30,19 +32,19 @@ func (_m *MockExtensionRepository) FindByCode(code string) (*models.Extension, e
 
 	var r0 *models.Extension
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (*models.Extension, error)); ok {
-		return rf(code)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*models.Extension, error)); ok {
+		return rf(ctx, code)
 	}
-	if rf, ok := ret.Get(0).(func(string) *models.Extension); ok {
-		r0 = rf(code)
+	if rf, ok := ret.Get(0).(func(context.Context, string) *models.Extension); ok {
+		r0 = rf(ctx, code)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.Extension)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(code)
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, code)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -56,14 +58,15 @@ type MockExtensionRepository_FindByCode_Call struct {
 }
 
 // FindByCode is a helper method to define mock.On call
+//   - ctx context.Context
 //   - code string
-func (_e *MockExtensionRepository_Expecter) FindByCode(code interface{}) *MockExtensionRepository_FindByCode_Call {
-	return &MockExtensionRepository_FindByCode_Call{Call: _e.mock.On("FindByCode", code)}
+func (_e *MockExtensionRepository_Expecter) FindByCode(ctx interface{}, code interface{}) *MockExtensionRepository_FindByCode_Call {
+	return &MockExtensionRepository_FindByCode_Call{Call: _e.mock.On("FindByCode", ctx, code)}
 }
 
-func (_c *MockExtensionRepository_FindByCode_Call) Run(run func(code string)) *MockExtensionRepository_FindByCode_Call {
+func (_c *MockExtensionRepository_FindByCode_Call) Run(run func(ctx context.Context, code string)) *MockExtensionRepository_FindByCode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -73,7 +76,7 @@ func (_c *MockExtensionRepository_FindByCode_Call) Return(_a0 *models.Extension,
 	return _c
 }
 
-func (_c *MockExtensionRepository_FindByCode_Call) RunAndReturn(run func(string) (*models.Extension, error)) *MockExtensionRepository_FindByCode_Call {
+func (_c *MockExtensionRepository_FindByCode_Call) RunAndReturn(run func(context.Context, string) (*models.Extension, error)) *MockExtensionRepository_FindByCode_Call {
 	_c.Call.Return(run)
 	return _c
 }

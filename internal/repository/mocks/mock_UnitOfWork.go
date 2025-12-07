@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	repository "github.com/R4yL-dev/pkmc/internal/repository"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -20,17 +22,17 @@ func (_m *MockUnitOfWork) EXPECT() *MockUnitOfWork_Expecter {
 	return &MockUnitOfWork_Expecter{mock: &_m.Mock}
 }
 
-// Do provides a mock function with given fields: fn
-func (_m *MockUnitOfWork) Do(fn func(repository.UnitOfWork) error) error {
-	ret := _m.Called(fn)
+// Do provides a mock function with given fields: ctx, fn
+func (_m *MockUnitOfWork) Do(ctx context.Context, fn func(repository.UnitOfWork) error) error {
+	ret := _m.Called(ctx, fn)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Do")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(func(repository.UnitOfWork) error) error); ok {
-		r0 = rf(fn)
+	if rf, ok := ret.Get(0).(func(context.Context, func(repository.UnitOfWork) error) error); ok {
+		r0 = rf(ctx, fn)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -44,14 +46,15 @@ type MockUnitOfWork_Do_Call struct {
 }
 
 // Do is a helper method to define mock.On call
+//   - ctx context.Context
 //   - fn func(repository.UnitOfWork) error
-func (_e *MockUnitOfWork_Expecter) Do(fn interface{}) *MockUnitOfWork_Do_Call {
-	return &MockUnitOfWork_Do_Call{Call: _e.mock.On("Do", fn)}
+func (_e *MockUnitOfWork_Expecter) Do(ctx interface{}, fn interface{}) *MockUnitOfWork_Do_Call {
+	return &MockUnitOfWork_Do_Call{Call: _e.mock.On("Do", ctx, fn)}
 }
 
-func (_c *MockUnitOfWork_Do_Call) Run(run func(fn func(repository.UnitOfWork) error)) *MockUnitOfWork_Do_Call {
+func (_c *MockUnitOfWork_Do_Call) Run(run func(ctx context.Context, fn func(repository.UnitOfWork) error)) *MockUnitOfWork_Do_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(func(repository.UnitOfWork) error))
+		run(args[0].(context.Context), args[1].(func(repository.UnitOfWork) error))
 	})
 	return _c
 }
@@ -61,7 +64,7 @@ func (_c *MockUnitOfWork_Do_Call) Return(_a0 error) *MockUnitOfWork_Do_Call {
 	return _c
 }
 
-func (_c *MockUnitOfWork_Do_Call) RunAndReturn(run func(func(repository.UnitOfWork) error) error) *MockUnitOfWork_Do_Call {
+func (_c *MockUnitOfWork_Do_Call) RunAndReturn(run func(context.Context, func(repository.UnitOfWork) error) error) *MockUnitOfWork_Do_Call {
 	_c.Call.Return(run)
 	return _c
 }

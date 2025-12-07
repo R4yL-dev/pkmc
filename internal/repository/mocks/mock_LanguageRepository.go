@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	models "github.com/R4yL-dev/pkmc/internal/models"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -20,9 +22,9 @@ func (_m *MockLanguageRepository) EXPECT() *MockLanguageRepository_Expecter {
 	return &MockLanguageRepository_Expecter{mock: &_m.Mock}
 }
 
-// FindByCode provides a mock function with given fields: code
-func (_m *MockLanguageRepository) FindByCode(code string) (*models.Language, error) {
-	ret := _m.Called(code)
+// FindByCode provides a mock function with given fields: ctx, code
+func (_m *MockLanguageRepository) FindByCode(ctx context.Context, code string) (*models.Language, error) {
+	ret := _m.Called(ctx, code)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindByCode")
@@ -30,19 +32,19 @@ func (_m *MockLanguageRepository) FindByCode(code string) (*models.Language, err
 
 	var r0 *models.Language
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (*models.Language, error)); ok {
-		return rf(code)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*models.Language, error)); ok {
+		return rf(ctx, code)
 	}
-	if rf, ok := ret.Get(0).(func(string) *models.Language); ok {
-		r0 = rf(code)
+	if rf, ok := ret.Get(0).(func(context.Context, string) *models.Language); ok {
+		r0 = rf(ctx, code)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.Language)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(code)
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, code)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -56,14 +58,15 @@ type MockLanguageRepository_FindByCode_Call struct {
 }
 
 // FindByCode is a helper method to define mock.On call
+//   - ctx context.Context
 //   - code string
-func (_e *MockLanguageRepository_Expecter) FindByCode(code interface{}) *MockLanguageRepository_FindByCode_Call {
-	return &MockLanguageRepository_FindByCode_Call{Call: _e.mock.On("FindByCode", code)}
+func (_e *MockLanguageRepository_Expecter) FindByCode(ctx interface{}, code interface{}) *MockLanguageRepository_FindByCode_Call {
+	return &MockLanguageRepository_FindByCode_Call{Call: _e.mock.On("FindByCode", ctx, code)}
 }
 
-func (_c *MockLanguageRepository_FindByCode_Call) Run(run func(code string)) *MockLanguageRepository_FindByCode_Call {
+func (_c *MockLanguageRepository_FindByCode_Call) Run(run func(ctx context.Context, code string)) *MockLanguageRepository_FindByCode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -73,7 +76,7 @@ func (_c *MockLanguageRepository_FindByCode_Call) Return(_a0 *models.Language, _
 	return _c
 }
 
-func (_c *MockLanguageRepository_FindByCode_Call) RunAndReturn(run func(string) (*models.Language, error)) *MockLanguageRepository_FindByCode_Call {
+func (_c *MockLanguageRepository_FindByCode_Call) RunAndReturn(run func(context.Context, string) (*models.Language, error)) *MockLanguageRepository_FindByCode_Call {
 	_c.Call.Return(run)
 	return _c
 }

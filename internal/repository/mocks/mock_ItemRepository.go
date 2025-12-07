@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	models "github.com/R4yL-dev/pkmc/internal/models"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -20,17 +22,17 @@ func (_m *MockItemRepository) EXPECT() *MockItemRepository_Expecter {
 	return &MockItemRepository_Expecter{mock: &_m.Mock}
 }
 
-// Create provides a mock function with given fields: item
-func (_m *MockItemRepository) Create(item *models.Item) error {
-	ret := _m.Called(item)
+// Create provides a mock function with given fields: ctx, item
+func (_m *MockItemRepository) Create(ctx context.Context, item *models.Item) error {
+	ret := _m.Called(ctx, item)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Create")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*models.Item) error); ok {
-		r0 = rf(item)
+	if rf, ok := ret.Get(0).(func(context.Context, *models.Item) error); ok {
+		r0 = rf(ctx, item)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -44,14 +46,15 @@ type MockItemRepository_Create_Call struct {
 }
 
 // Create is a helper method to define mock.On call
+//   - ctx context.Context
 //   - item *models.Item
-func (_e *MockItemRepository_Expecter) Create(item interface{}) *MockItemRepository_Create_Call {
-	return &MockItemRepository_Create_Call{Call: _e.mock.On("Create", item)}
+func (_e *MockItemRepository_Expecter) Create(ctx interface{}, item interface{}) *MockItemRepository_Create_Call {
+	return &MockItemRepository_Create_Call{Call: _e.mock.On("Create", ctx, item)}
 }
 
-func (_c *MockItemRepository_Create_Call) Run(run func(item *models.Item)) *MockItemRepository_Create_Call {
+func (_c *MockItemRepository_Create_Call) Run(run func(ctx context.Context, item *models.Item)) *MockItemRepository_Create_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*models.Item))
+		run(args[0].(context.Context), args[1].(*models.Item))
 	})
 	return _c
 }
@@ -61,14 +64,14 @@ func (_c *MockItemRepository_Create_Call) Return(_a0 error) *MockItemRepository_
 	return _c
 }
 
-func (_c *MockItemRepository_Create_Call) RunAndReturn(run func(*models.Item) error) *MockItemRepository_Create_Call {
+func (_c *MockItemRepository_Create_Call) RunAndReturn(run func(context.Context, *models.Item) error) *MockItemRepository_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindByID provides a mock function with given fields: id
-func (_m *MockItemRepository) FindByID(id uint) (*models.Item, error) {
-	ret := _m.Called(id)
+// FindByID provides a mock function with given fields: ctx, id
+func (_m *MockItemRepository) FindByID(ctx context.Context, id uint) (*models.Item, error) {
+	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindByID")
@@ -76,19 +79,19 @@ func (_m *MockItemRepository) FindByID(id uint) (*models.Item, error) {
 
 	var r0 *models.Item
 	var r1 error
-	if rf, ok := ret.Get(0).(func(uint) (*models.Item, error)); ok {
-		return rf(id)
+	if rf, ok := ret.Get(0).(func(context.Context, uint) (*models.Item, error)); ok {
+		return rf(ctx, id)
 	}
-	if rf, ok := ret.Get(0).(func(uint) *models.Item); ok {
-		r0 = rf(id)
+	if rf, ok := ret.Get(0).(func(context.Context, uint) *models.Item); ok {
+		r0 = rf(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.Item)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(uint) error); ok {
-		r1 = rf(id)
+	if rf, ok := ret.Get(1).(func(context.Context, uint) error); ok {
+		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -102,14 +105,15 @@ type MockItemRepository_FindByID_Call struct {
 }
 
 // FindByID is a helper method to define mock.On call
+//   - ctx context.Context
 //   - id uint
-func (_e *MockItemRepository_Expecter) FindByID(id interface{}) *MockItemRepository_FindByID_Call {
-	return &MockItemRepository_FindByID_Call{Call: _e.mock.On("FindByID", id)}
+func (_e *MockItemRepository_Expecter) FindByID(ctx interface{}, id interface{}) *MockItemRepository_FindByID_Call {
+	return &MockItemRepository_FindByID_Call{Call: _e.mock.On("FindByID", ctx, id)}
 }
 
-func (_c *MockItemRepository_FindByID_Call) Run(run func(id uint)) *MockItemRepository_FindByID_Call {
+func (_c *MockItemRepository_FindByID_Call) Run(run func(ctx context.Context, id uint)) *MockItemRepository_FindByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(uint))
+		run(args[0].(context.Context), args[1].(uint))
 	})
 	return _c
 }
@@ -119,7 +123,7 @@ func (_c *MockItemRepository_FindByID_Call) Return(_a0 *models.Item, _a1 error) 
 	return _c
 }
 
-func (_c *MockItemRepository_FindByID_Call) RunAndReturn(run func(uint) (*models.Item, error)) *MockItemRepository_FindByID_Call {
+func (_c *MockItemRepository_FindByID_Call) RunAndReturn(run func(context.Context, uint) (*models.Item, error)) *MockItemRepository_FindByID_Call {
 	_c.Call.Return(run)
 	return _c
 }
