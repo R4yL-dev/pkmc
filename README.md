@@ -149,6 +149,86 @@ Optional (for development):
 - golangci-lint (code quality checks)
 - mockery (mock generation)
 
+## 📝 TODO & Roadmap
+
+### 🔴 Priority - Core Features
+
+- [ ] **Collection Management**
+  - [ ] List/search items with filters (extension, language, type, price range)
+  - [ ] Update item information (price, notes, condition)
+  - [ ] Delete items from collection
+  - [ ] Bulk operations (import/export CSV, batch updates)
+
+- [ ] **Statistics & Reporting**
+  - [ ] Collection value calculation
+  - [ ] Items count by extension/language/type
+  - [ ] Price history tracking
+  - [ ] Export reports (PDF, CSV)
+
+### 🟡 Medium Priority - Quality of Life
+
+- [ ] **Logging System**
+  - [ ] Structured logging with levels (Debug, Info, Warn, Error)
+  - [ ] Log rotation and retention policies
+  - [ ] Request ID tracking for operation tracing
+  - [ ] Performance metrics logging
+
+- [ ] **CLI Interface**
+  - [ ] Interactive command-line interface with Cobra/urfave/cli
+  - [ ] Commands: add, list, search, update, delete, stats
+  - [ ] Pretty output with tables and colors
+  - [ ] Configuration wizard for first-time setup
+
+- [ ] **Data Validation**
+  - [ ] Input validation at service layer
+  - [ ] Custom error types for better error handling
+  - [ ] Duplicate detection when adding items
+
+### 🟢 Future Enhancements
+
+- [ ] **REST API**
+  - [ ] HTTP server with Gin/Echo
+  - [ ] RESTful endpoints for all CRUD operations
+  - [ ] API documentation with Swagger
+  - [ ] Authentication & authorization
+
+- [ ] **Advanced Features**
+  - [ ] Image storage for item photos
+  - [ ] Wishlist management
+  - [ ] Trading functionality (track trades with other collectors)
+  - [ ] Market price integration (TCGPlayer, Cardmarket APIs)
+  - [ ] Notifications for price changes
+
+- [ ] **Data Management**
+  - [ ] Automatic extension updates from external sources
+  - [ ] Backup and restore functionality
+  - [ ] Database migrations versioning
+  - [ ] Support for multiple database backends (PostgreSQL, MySQL)
+
+### 🔧 Technical Improvements
+
+- [ ] **Testing**
+  - [ ] Increase test coverage to >80%
+  - [ ] Add more integration tests
+  - [ ] Performance benchmarks
+  - [ ] End-to-end testing
+
+- [ ] **Documentation**
+  - [ ] API documentation
+  - [ ] Architecture decision records (ADRs)
+  - [ ] Contributing guidelines
+  - [ ] Code examples and tutorials
+
+- [ ] **DevOps**
+  - [ ] CI/CD pipeline (GitHub Actions)
+  - [ ] Docker support
+  - [ ] Release automation
+  - [ ] Dependency security scanning
+
+---
+
+> **Note:** This roadmap is subject to change based on learning priorities and project evolution.
+
 ## 📄 License
 
 [MIT License](LICENSE)
