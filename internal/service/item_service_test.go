@@ -1,8 +1,10 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"github.com/R4yL-dev/pkmc/internal/repository"
@@ -32,8 +34,8 @@ func TestItemService_CreateItem(t *testing.T) {
 			price:    testutil.FloatPtr(129.99),
 			setupMocks: func(uow *mocks.MockUnitOfWork, items *mocks.MockItemRepository, exts *mocks.MockExtensionRepository, langs *mocks.MockLanguageRepository, types *mocks.MockItemTypeRepository) {
 				// Setup UoW to execute the function
-				uow.On("Do", mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
-					fn := args.Get(0).(func(repository.UnitOfWork) error)
+				uow.On("Do", mock.Anything, mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
+					fn := args.Get(1).(func(repository.UnitOfWork) error)
 					fn(uow) // Execute the function with the mock UoW
 				}).Return(nil)
 
@@ -43,31 +45,31 @@ func TestItemService_CreateItem(t *testing.T) {
 				uow.On("ItemTypes").Return(types)
 				uow.On("Items").Return(items)
 
-				exts.On("FindByCode", "DRI").Return(&models.Extension{
+				exts.On("FindByCode", mock.Anything, "DRI").Return(&models.Extension{
 					Model: gorm.Model{ID: 1},
 					Code:  "DRI",
 					Name:  "Destinées Radieuses",
 				}, nil)
 
-				langs.On("FindByCode", "fr").Return(&models.Language{
+				langs.On("FindByCode", mock.Anything, "fr").Return(&models.Language{
 					Model: gorm.Model{ID: 1},
 					Code:  "fr",
 					Name:  "Français",
 				}, nil)
 
-				types.On("FindByName", "Display").Return(&models.ItemType{
+				types.On("FindByName", mock.Anything, "Display").Return(&models.ItemType{
 					Model: gorm.Model{ID: 1},
 					Name:  "Display",
 				}, nil)
 
-				items.On("Create", mock.MatchedBy(func(item *models.Item) bool {
+				items.On("Create", mock.Anything, mock.MatchedBy(func(item *models.Item) bool {
 					return item.ExtensionID == 1 && item.TypeID == 1 && item.LanguageID == 1
 				})).Run(func(args mock.Arguments) {
-					item := args.Get(0).(*models.Item)
+					item := args.Get(1).(*models.Item)
 					item.ID = 10 // Simulate DB assigning ID
 				}).Return(nil)
 
-				items.On("FindByID", uint(10)).Return(&models.Item{
+				items.On("FindByID", mock.Anything, uint(10)).Return(&models.Item{
 					Model:       gorm.Model{ID: 10},
 					ExtensionID: 1,
 					TypeID:      1,
@@ -107,8 +109,8 @@ func TestItemService_CreateItem(t *testing.T) {
 			typeName: "Display",
 			price:    nil,
 			setupMocks: func(uow *mocks.MockUnitOfWork, items *mocks.MockItemRepository, exts *mocks.MockExtensionRepository, langs *mocks.MockLanguageRepository, types *mocks.MockItemTypeRepository) {
-				uow.On("Do", mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
-					fn := args.Get(0).(func(repository.UnitOfWork) error)
+				uow.On("Do", mock.Anything, mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
+					fn := args.Get(1).(func(repository.UnitOfWork) error)
 					fn(uow)
 				}).Return(nil)
 
@@ -117,16 +119,16 @@ func TestItemService_CreateItem(t *testing.T) {
 				uow.On("ItemTypes").Return(types)
 				uow.On("Items").Return(items)
 
-				exts.On("FindByCode", "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}, Code: "DRI"}, nil)
-				langs.On("FindByCode", "fr").Return(&models.Language{Model: gorm.Model{ID: 1}, Code: "fr"}, nil)
-				types.On("FindByName", "Display").Return(&models.ItemType{Model: gorm.Model{ID: 1}, Name: "Display"}, nil)
+				exts.On("FindByCode", mock.Anything, "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}, Code: "DRI"}, nil)
+				langs.On("FindByCode", mock.Anything, "fr").Return(&models.Language{Model: gorm.Model{ID: 1}, Code: "fr"}, nil)
+				types.On("FindByName", mock.Anything, "Display").Return(&models.ItemType{Model: gorm.Model{ID: 1}, Name: "Display"}, nil)
 
-				items.On("Create", mock.Anything).Run(func(args mock.Arguments) {
-					item := args.Get(0).(*models.Item)
+				items.On("Create", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+					item := args.Get(1).(*models.Item)
 					item.ID = 11
 				}).Return(nil)
 
-				items.On("FindByID", uint(11)).Return(&models.Item{
+				items.On("FindByID", mock.Anything, uint(11)).Return(&models.Item{
 					Model:       gorm.Model{ID: 11},
 					ExtensionID: 1,
 					TypeID:      1,
@@ -149,14 +151,14 @@ func TestItemService_CreateItem(t *testing.T) {
 			typeName: "Display",
 			price:    testutil.FloatPtr(99.99),
 			setupMocks: func(uow *mocks.MockUnitOfWork, items *mocks.MockItemRepository, exts *mocks.MockExtensionRepository, langs *mocks.MockLanguageRepository, types *mocks.MockItemTypeRepository) {
-				uow.On("Do", mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
-					fn := args.Get(0).(func(repository.UnitOfWork) error)
+				uow.On("Do", mock.Anything, mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
+					fn := args.Get(1).(func(repository.UnitOfWork) error)
 					fn(uow)
 				}).Return(errors.New("extension 'INVALID' not found: record not found"))
 
 				uow.On("Extensions").Return(exts)
 
-				exts.On("FindByCode", "INVALID").Return(nil, errors.New("record not found"))
+				exts.On("FindByCode", mock.Anything, "INVALID").Return(nil, errors.New("record not found"))
 			},
 			expectedError: "extension 'INVALID' not found",
 		},
@@ -167,16 +169,16 @@ func TestItemService_CreateItem(t *testing.T) {
 			typeName: "Display",
 			price:    testutil.FloatPtr(99.99),
 			setupMocks: func(uow *mocks.MockUnitOfWork, items *mocks.MockItemRepository, exts *mocks.MockExtensionRepository, langs *mocks.MockLanguageRepository, types *mocks.MockItemTypeRepository) {
-				uow.On("Do", mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
-					fn := args.Get(0).(func(repository.UnitOfWork) error)
+				uow.On("Do", mock.Anything, mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
+					fn := args.Get(1).(func(repository.UnitOfWork) error)
 					fn(uow)
 				}).Return(errors.New("language 'invalid' not found: record not found"))
 
 				uow.On("Extensions").Return(exts)
 				uow.On("Languages").Return(langs)
 
-				exts.On("FindByCode", "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}, Code: "DRI"}, nil)
-				langs.On("FindByCode", "invalid").Return(nil, errors.New("record not found"))
+				exts.On("FindByCode", mock.Anything, "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}, Code: "DRI"}, nil)
+				langs.On("FindByCode", mock.Anything, "invalid").Return(nil, errors.New("record not found"))
 			},
 			expectedError: "language 'invalid' not found",
 		},
@@ -187,8 +189,8 @@ func TestItemService_CreateItem(t *testing.T) {
 			typeName: "InvalidType",
 			price:    testutil.FloatPtr(99.99),
 			setupMocks: func(uow *mocks.MockUnitOfWork, items *mocks.MockItemRepository, exts *mocks.MockExtensionRepository, langs *mocks.MockLanguageRepository, types *mocks.MockItemTypeRepository) {
-				uow.On("Do", mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
-					fn := args.Get(0).(func(repository.UnitOfWork) error)
+				uow.On("Do", mock.Anything, mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
+					fn := args.Get(1).(func(repository.UnitOfWork) error)
 					fn(uow)
 				}).Return(errors.New("item type 'InvalidType' not found: record not found"))
 
@@ -196,9 +198,9 @@ func TestItemService_CreateItem(t *testing.T) {
 				uow.On("Languages").Return(langs)
 				uow.On("ItemTypes").Return(types)
 
-				exts.On("FindByCode", "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}}, nil)
-				langs.On("FindByCode", "fr").Return(&models.Language{Model: gorm.Model{ID: 1}}, nil)
-				types.On("FindByName", "InvalidType").Return(nil, errors.New("record not found"))
+				exts.On("FindByCode", mock.Anything, "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}}, nil)
+				langs.On("FindByCode", mock.Anything, "fr").Return(&models.Language{Model: gorm.Model{ID: 1}}, nil)
+				types.On("FindByName", mock.Anything, "InvalidType").Return(nil, errors.New("record not found"))
 			},
 			expectedError: "item type 'InvalidType' not found",
 		},
@@ -209,8 +211,8 @@ func TestItemService_CreateItem(t *testing.T) {
 			typeName: "Display",
 			price:    testutil.FloatPtr(99.99),
 			setupMocks: func(uow *mocks.MockUnitOfWork, items *mocks.MockItemRepository, exts *mocks.MockExtensionRepository, langs *mocks.MockLanguageRepository, types *mocks.MockItemTypeRepository) {
-				uow.On("Do", mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
-					fn := args.Get(0).(func(repository.UnitOfWork) error)
+				uow.On("Do", mock.Anything, mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
+					fn := args.Get(1).(func(repository.UnitOfWork) error)
 					fn(uow)
 				}).Return(errors.New("failed to create item: database error"))
 
@@ -219,10 +221,10 @@ func TestItemService_CreateItem(t *testing.T) {
 				uow.On("ItemTypes").Return(types)
 				uow.On("Items").Return(items)
 
-				exts.On("FindByCode", "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}}, nil)
-				langs.On("FindByCode", "fr").Return(&models.Language{Model: gorm.Model{ID: 1}}, nil)
-				types.On("FindByName", "Display").Return(&models.ItemType{Model: gorm.Model{ID: 1}}, nil)
-				items.On("Create", mock.Anything).Return(errors.New("database error"))
+				exts.On("FindByCode", mock.Anything, "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}}, nil)
+				langs.On("FindByCode", mock.Anything, "fr").Return(&models.Language{Model: gorm.Model{ID: 1}}, nil)
+				types.On("FindByName", mock.Anything, "Display").Return(&models.ItemType{Model: gorm.Model{ID: 1}}, nil)
+				items.On("Create", mock.Anything, mock.Anything).Return(errors.New("database error"))
 			},
 			expectedError: "failed to create item",
 		},
@@ -233,8 +235,8 @@ func TestItemService_CreateItem(t *testing.T) {
 			typeName: "Display",
 			price:    testutil.FloatPtr(99.99),
 			setupMocks: func(uow *mocks.MockUnitOfWork, items *mocks.MockItemRepository, exts *mocks.MockExtensionRepository, langs *mocks.MockLanguageRepository, types *mocks.MockItemTypeRepository) {
-				uow.On("Do", mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
-					fn := args.Get(0).(func(repository.UnitOfWork) error)
+				uow.On("Do", mock.Anything, mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
+					fn := args.Get(1).(func(repository.UnitOfWork) error)
 					fn(uow)
 				}).Return(errors.New("failed to load created item: database error"))
 
@@ -243,14 +245,14 @@ func TestItemService_CreateItem(t *testing.T) {
 				uow.On("ItemTypes").Return(types)
 				uow.On("Items").Return(items)
 
-				exts.On("FindByCode", "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}}, nil)
-				langs.On("FindByCode", "fr").Return(&models.Language{Model: gorm.Model{ID: 1}}, nil)
-				types.On("FindByName", "Display").Return(&models.ItemType{Model: gorm.Model{ID: 1}}, nil)
-				items.On("Create", mock.Anything).Run(func(args mock.Arguments) {
-					item := args.Get(0).(*models.Item)
+				exts.On("FindByCode", mock.Anything, "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}}, nil)
+				langs.On("FindByCode", mock.Anything, "fr").Return(&models.Language{Model: gorm.Model{ID: 1}}, nil)
+				types.On("FindByName", mock.Anything, "Display").Return(&models.ItemType{Model: gorm.Model{ID: 1}}, nil)
+				items.On("Create", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+					item := args.Get(1).(*models.Item)
 					item.ID = 12
 				}).Return(nil)
-				items.On("FindByID", uint(12)).Return(nil, errors.New("database error"))
+				items.On("FindByID", mock.Anything, uint(12)).Return(nil, errors.New("database error"))
 			},
 			expectedError: "failed to load created item",
 		},
@@ -261,14 +263,14 @@ func TestItemService_CreateItem(t *testing.T) {
 			typeName: "Display",
 			price:    testutil.FloatPtr(99.99),
 			setupMocks: func(uow *mocks.MockUnitOfWork, items *mocks.MockItemRepository, exts *mocks.MockExtensionRepository, langs *mocks.MockLanguageRepository, types *mocks.MockItemTypeRepository) {
-				uow.On("Do", mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
-					fn := args.Get(0).(func(repository.UnitOfWork) error)
+				uow.On("Do", mock.Anything, mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
+					fn := args.Get(1).(func(repository.UnitOfWork) error)
 					fn(uow)
 				}).Return(errors.New("extension '' not found: record not found"))
 
 				uow.On("Extensions").Return(exts)
 
-				exts.On("FindByCode", "").Return(nil, errors.New("record not found"))
+				exts.On("FindByCode", mock.Anything, "").Return(nil, errors.New("record not found"))
 			},
 			expectedError: "extension '' not found",
 		},
@@ -279,16 +281,16 @@ func TestItemService_CreateItem(t *testing.T) {
 			typeName: "Display",
 			price:    testutil.FloatPtr(99.99),
 			setupMocks: func(uow *mocks.MockUnitOfWork, items *mocks.MockItemRepository, exts *mocks.MockExtensionRepository, langs *mocks.MockLanguageRepository, types *mocks.MockItemTypeRepository) {
-				uow.On("Do", mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
-					fn := args.Get(0).(func(repository.UnitOfWork) error)
+				uow.On("Do", mock.Anything, mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
+					fn := args.Get(1).(func(repository.UnitOfWork) error)
 					fn(uow)
 				}).Return(errors.New("language '' not found: record not found"))
 
 				uow.On("Extensions").Return(exts)
 				uow.On("Languages").Return(langs)
 
-				exts.On("FindByCode", "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}}, nil)
-				langs.On("FindByCode", "").Return(nil, errors.New("record not found"))
+				exts.On("FindByCode", mock.Anything, "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}}, nil)
+				langs.On("FindByCode", mock.Anything, "").Return(nil, errors.New("record not found"))
 			},
 			expectedError: "language '' not found",
 		},
@@ -299,8 +301,8 @@ func TestItemService_CreateItem(t *testing.T) {
 			typeName: "",
 			price:    testutil.FloatPtr(99.99),
 			setupMocks: func(uow *mocks.MockUnitOfWork, items *mocks.MockItemRepository, exts *mocks.MockExtensionRepository, langs *mocks.MockLanguageRepository, types *mocks.MockItemTypeRepository) {
-				uow.On("Do", mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
-					fn := args.Get(0).(func(repository.UnitOfWork) error)
+				uow.On("Do", mock.Anything, mock.AnythingOfType("func(repository.UnitOfWork) error")).Run(func(args mock.Arguments) {
+					fn := args.Get(1).(func(repository.UnitOfWork) error)
 					fn(uow)
 				}).Return(errors.New("item type '' not found: record not found"))
 
@@ -308,9 +310,9 @@ func TestItemService_CreateItem(t *testing.T) {
 				uow.On("Languages").Return(langs)
 				uow.On("ItemTypes").Return(types)
 
-				exts.On("FindByCode", "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}}, nil)
-				langs.On("FindByCode", "fr").Return(&models.Language{Model: gorm.Model{ID: 1}}, nil)
-				types.On("FindByName", "").Return(nil, errors.New("record not found"))
+				exts.On("FindByCode", mock.Anything, "DRI").Return(&models.Extension{Model: gorm.Model{ID: 1}}, nil)
+				langs.On("FindByCode", mock.Anything, "fr").Return(&models.Language{Model: gorm.Model{ID: 1}}, nil)
+				types.On("FindByName", mock.Anything, "").Return(nil, errors.New("record not found"))
 			},
 			expectedError: "item type '' not found",
 		},
@@ -329,9 +331,10 @@ func TestItemService_CreateItem(t *testing.T) {
 
 			// Create service
 			service := NewItemService(mockUoW)
+			ctx := context.Background()
 
 			// Execute
-			item, err := service.CreateItem(tt.extCode, tt.langCode, tt.typeName, tt.price)
+			item, err := service.CreateItem(ctx, tt.extCode, tt.langCode, tt.typeName, tt.price)
 
 			// Assert
 			if tt.expectedError != "" {
@@ -347,4 +350,31 @@ func TestItemService_CreateItem(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestItemService_CreateItem_WithTimeout(t *testing.T) {
+	// Setup mocks
+	mockUoW := mocks.NewMockUnitOfWork(t)
+
+	// Mock Do to return context deadline exceeded
+	mockUoW.On("Do", mock.Anything, mock.AnythingOfType("func(repository.UnitOfWork) error")).
+		Return(context.DeadlineExceeded)
+
+	// Create service
+	service := NewItemService(mockUoW)
+
+	// Create a context with very short timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
+	defer cancel()
+
+	// Wait to ensure timeout
+	time.Sleep(2 * time.Millisecond)
+
+	// Execute
+	item, err := service.CreateItem(ctx, "DRI", "fr", "Display", testutil.FloatPtr(99.99))
+
+	// Assert - should fail with context deadline exceeded
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "context deadline exceeded")
+	assert.Nil(t, item)
 }
