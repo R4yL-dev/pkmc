@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"gorm.io/gorm"
 )
@@ -13,10 +15,10 @@ func NewExtensionRepository(db *gorm.DB) ExtensionRepository {
 	return &extensionRepository{db: db}
 }
 
-func (r *extensionRepository) FindByCode(code string) (*models.Extension, error) {
+func (r *extensionRepository) FindByCode(ctx context.Context, code string) (*models.Extension, error) {
 	var ext models.Extension
 
-	err := r.db.Where("code = ?", code).First(&ext).Error
+	err := r.db.WithContext(ctx).Where("code = ?", code).First(&ext).Error
 	if err != nil {
 		return nil, err
 	}

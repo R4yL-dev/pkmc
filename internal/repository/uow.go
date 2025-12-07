@@ -1,25 +1,31 @@
 package repository
 
-import "gorm.io/gorm"
+import (
+	"context"
+
+	"gorm.io/gorm"
+)
 
 type unitOfWork struct {
-	db *gorm.DB
-	tx *gorm.DB
+	db  *gorm.DB
+	tx  *gorm.DB
+	ctx context.Context
 }
 
 func NewUnitOfWork(db *gorm.DB) UnitOfWork {
 	return &unitOfWork{db: db}
 }
 
-func (u *unitOfWork) Do(fn func(uow UnitOfWork) error) error {
-	tx := u.db.Begin()
+func (u *unitOfWork) Do(ctx context.Context, fn func(uow UnitOfWork) error) error {
+	tx := u.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return tx.Error
 	}
 
 	txUoW := &unitOfWork{
-		db: u.db,
-		tx: tx,
+		db:  u.db,
+		tx:  tx,
+		ctx: ctx,
 	}
 
 	if err := fn(txUoW); err != nil {

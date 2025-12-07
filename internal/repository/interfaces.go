@@ -1,26 +1,30 @@
 package repository
 
-import "github.com/R4yL-dev/pkmc/internal/models"
+import (
+	"context"
+
+	"github.com/R4yL-dev/pkmc/internal/models"
+)
 
 type ItemRepository interface {
-	Create(item *models.Item) error
-	FindByID(id uint) (*models.Item, error)
+	Create(ctx context.Context, item *models.Item) error
+	FindByID(ctx context.Context, id uint) (*models.Item, error)
 }
 
 type ExtensionRepository interface {
-	FindByCode(code string) (*models.Extension, error)
+	FindByCode(ctx context.Context, code string) (*models.Extension, error)
 }
 
 type LanguageRepository interface {
-	FindByCode(code string) (*models.Language, error)
+	FindByCode(ctx context.Context, code string) (*models.Language, error)
 }
 
 type ItemTypeRepository interface {
-	FindByName(name string) (*models.ItemType, error)
+	FindByName(ctx context.Context, name string) (*models.ItemType, error)
 }
 
 type UnitOfWork interface {
-	Do(fn func(uow UnitOfWork) error) error
+	Do(ctx context.Context, fn func(uow UnitOfWork) error) error
 	Items() ItemRepository
 	Extensions() ExtensionRepository
 	Languages() LanguageRepository
