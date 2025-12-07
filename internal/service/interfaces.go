@@ -1,7 +1,11 @@
 package service
 
-import "github.com/R4yL-dev/pkmc/internal/models"
+import (
+	"context"
+
+	"github.com/R4yL-dev/pkmc/internal/models"
+)
 
 type ItemService interface {
-	CreateItem(extCode, langCode, typeName string, price *float64) (*models.Item, error)
+	CreateItem(ctx context.Context, extCode, langCode, typeName string, price *float64) (*models.Item, error)
 }
