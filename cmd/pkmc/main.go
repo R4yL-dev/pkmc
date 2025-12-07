@@ -26,7 +26,9 @@ func main() {
 	}
 
 	// Seed reference data
-	seed.Seed(container.DB)
+	if err := seed.Seed(container.DB); err != nil {
+		log.Fatalf("Failed to seed database: %v", err)
+	}
 
 	// Example: Create an item using the service
 	price := 129.99
