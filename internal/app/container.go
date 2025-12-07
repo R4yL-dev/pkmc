@@ -9,8 +9,9 @@ import (
 )
 
 type Container struct {
-	DB  *gorm.DB
-	UoW repository.UnitOfWork
+	DB     *gorm.DB
+	UoW    repository.UnitOfWork
+	Config *config.Config
 
 	ItemService service.ItemService
 }
@@ -30,6 +31,7 @@ func NewContainer() (*Container, error) {
 	return &Container{
 		DB:          db,
 		UoW:         uow,
+		Config:      cfg,
 		ItemService: itemService,
 	}, nil
 }
