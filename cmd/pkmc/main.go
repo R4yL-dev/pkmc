@@ -1,48 +1,43 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 
 	"github.com/R4yL-dev/pkmc/internal/app"
-	"github.com/R4yL-dev/pkmc/internal/config"
 	"github.com/R4yL-dev/pkmc/internal/models"
-	"github.com/R4yL-dev/pkmc/internal/seed"
 )
 
 func main() {
-	config.Load()
-
-	// Initialize dependency injection container
-	container, err := app.NewContainer()
+	application, err := app.Initialize()
 	if err != nil {
-		log.Fatalf("Failed to initialize container: %v", err)
+		log.Fatalf("Failed to bootstrap application: %v", err)
 	}
-	defer container.Close()
+	defer application.Close()
 
-	// Auto-migrate database models
-	if err := container.DB.AutoMigrate(models.GetModels()...); err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
+	if err := runExemple(application); err != nil {
+		log.Fatalf("Exemple error: %v", err)
 	}
+}
 
-	// Seed reference data
-	if err := seed.Seed(container.DB); err != nil {
-		log.Fatalf("Failed to seed database: %v", err)
-	}
-
-	// Create context with 30 seconds timeout
-	ctx, cancel := context.WithTimeout(context.Background(), container.Config.GetDefaultTimeout())
+func runExemple(app *app.Application) error {
+	ctx, cancel := app.NewOperationContext()
 	defer cancel()
 
-	// Example: Create an item using the service
-	price := 129.99
-	item, err := container.ItemService.CreateItem(ctx, "DRI", "fr", "Display", &price)
+	price := 189.95
+	item, err := app.Container.ItemService.CreateItem(ctx, "DRI", "fr", "Display", &price)
 	if err != nil {
-		log.Fatalf("Failed to create item: %v", err)
+		return fmt.Errorf("failed to create item: %w", err)
 	}
 
 	fmt.Printf("✅ Item created successfully!\n")
+
+	printItem(item)
+
+	return nil
+}
+
+func printItem(item *models.Item) {
 	fmt.Printf("   ID: %d\n", item.ID)
 	fmt.Printf("   Extension: %s (%s)\n", item.Extension.Name, item.Extension.Code)
 	fmt.Printf("   Type: %s\n", item.Type.Name)
