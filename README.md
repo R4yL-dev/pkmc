@@ -11,13 +11,14 @@ The application follows clean architecture with four main layers:
 - **Models** (`internal/models/`) - Domain entities representing the business domain
 - **Repository** (`internal/repository/`) - Data access layer with Unit of Work pattern for transactions
 - **Service** (`internal/service/`) - Business logic layer orchestrating repositories
-- **Container** (`internal/app/`) - Dependency injection container managing application lifecycle
+- **Application** (`internal/app/`) - Application bootstrap with dependency injection container and context management
 
 ## ✨ Features
 
 - **5 Domain Models**: [`Block`](internal/models/block.go), [`Extension`](internal/models/extension.go), [`Language`](internal/models/language.go), [`ItemType`](internal/models/item_type.go), [`Item`](internal/models/item.go)
 - **Unit of Work Pattern** - Transaction management across multiple repositories
 - **Item Service** - High-level API for creating and managing inventory items
+- **Application Bootstrap** - Centralized initialization with context and container management
 - **Automatic Seeding** - Pre-populated with 38+ Pokémon TCG extensions across 3 blocks and reference data (languages, item types)
 - **Comprehensive Testing** - Unit and integration tests with mocks and in-memory SQLite
 
@@ -27,43 +28,50 @@ The application follows clean architecture with four main layers:
 package main
 
 import (
-    "context"
+    "fmt"
     "log"
     "github.com/R4yL-dev/pkmc/internal/app"
-    "github.com/R4yL-dev/pkmc/internal/config"
-    "github.com/R4yL-dev/pkmc/internal/models"
-    "github.com/R4yL-dev/pkmc/seed"
 )
 
 func main() {
-    // Load configuration
-    config.Load()
-
-    // Initialize container with database, repositories, and services
-    container, err := app.NewContainer()
+    // Initialize application (loads config, sets up DB, runs migrations, seeds data)
+    application, err := app.Initialize()
     if err != nil {
-        log.Fatalf("Failed to initialize container: %v", err)
+        log.Fatalf("Failed to initialize application: %v", err)
     }
-    defer container.Close()
+    defer application.Close()
 
-    // Auto-migrate and seed reference data
-    container.DB.AutoMigrate(models.GetModels()...)
-    seed.Seed(container.DB)
-
-    // Create an item: French Display for Rivalités Destinées (DRI) extension
-    ctx, cancel := context.WithTimeout(context.Background(), container.Config.GetDefaultTimeout())
+    // Create a context with default timeout for operations
+    ctx, cancel := application.NewOperationContext()
     defer cancel()
 
-    price := 180
-    item, err := container.ItemService.CreateItem(ctx, "DRI", "fr", "Display", &price)
+    // Create an item: French Display for Rivalités Destinées (DRI) extension
+    price := 180.00
+    item, err := application.Container.ItemService.CreateItem(ctx, "DRI", "fr", "Display", &price)
     if err != nil {
         log.Fatalf("Failed to create item: %v", err)
     }
 
     // Item is returned with all associations preloaded
-    log.Printf("✅ Item created: %s %s (%s) - %.2f€\n",
-        item.Extension.Name, item.Type.Name, item.Language.Name, *item.Price)
+    fmt.Printf("✅ Item created successfully!\n")
+    fmt.Printf("   Extension: %s (%s)\n", item.Extension.Name, item.Extension.Code)
+    fmt.Printf("   Type: %s\n", item.Type.Name)
+    fmt.Printf("   Language: %s\n", item.Language.Name)
+    fmt.Printf("   Price: %.2f€\n", *item.Price)
 }
+```
+
+### Advanced Usage
+
+```go
+// Custom timeout for long-running operations
+ctx, cancel := application.NewOperationContextWithTimeout(5 * time.Minute)
+defer cancel()
+
+// Access container components directly
+db := application.Container.DB
+uow := application.Container.UoW
+config := application.Container.Config
 ```
 
 ## 🛠️ Development
@@ -73,14 +81,29 @@ func main() {
 The project uses a Makefile with the following targets:
 
 ```text
-make dev              # Full development cycle: clean, build, and run
-make build            # Build production binary
-make build-debug      # Build with debug symbols
+make dev              # Full development cycle: clean, reset DB, build and run
+make run              # Build and run the application
+make build            # Build application (debug mode)
+make build-prod       # Build optimized production binary
+
 make test             # Run all tests
-make test-coverage    # Generate HTML coverage report
+make test-verbose     # Run tests with verbose output
+make test-coverage    # Generate and open HTML coverage report
 make test-race        # Run tests with race detector
-make check            # Run code quality checks (fmt, vet, lint)
-make mocks            # Generate test mocks with mockery
+
+make check            # Run all checks (fmt, vet, lint, test)
+make fmt              # Format code with go fmt
+make vet              # Run go vet
+make lint             # Run golangci-lint
+
+make db-clean         # Remove all database files
+make db-reset         # Clean, migrate and seed database
+
+make deps             # Download Go dependencies
+make tidy             # Tidy Go dependencies
+make mocks            # Generate mocks with mockery
+
+make clean            # Remove build artifacts, databases, and test cache
 make all              # Complete pipeline: clean, deps, mocks, check, build
 ```
 
@@ -94,6 +117,26 @@ Configure via environment variables:
 ### Testing
 
 Tests use `testify` for assertions and mocks, with in-memory SQLite for integration tests. Run `make test-coverage` to generate an HTML coverage report.
+
+The test cache is automatically cleaned with `make clean` to ensure fresh test runs.
+
+## 📦 Project Structure
+
+```text
+pkmc/
+├── cmd/pkmc/           # Application entry point
+├── internal/
+│   ├── app/            # Application bootstrap and DI container
+│   ├── config/         # Configuration management
+│   ├── database/       # Database initialization
+│   ├── models/         # Domain models
+│   ├── repository/     # Data access layer with UoW
+│   ├── service/        # Business logic layer
+│   ├── seed/           # Database seeding
+│   └── testutil/       # Testing utilities and fixtures
+├── Makefile            # Build automation
+└── README.md
+```
 
 ## 📋 Requirements
 
