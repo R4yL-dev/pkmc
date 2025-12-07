@@ -1,5 +1,9 @@
 /pkmc
 /main
+bin/
+
 *.db
 *.txt
 *.log
+
+reports/
