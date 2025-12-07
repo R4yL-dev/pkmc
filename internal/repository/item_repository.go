@@ -5,19 +5,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type ItemRepository struct {
+type itemRepository struct {
 	db *gorm.DB
 }
 
-func NewItemRepository(db *gorm.DB) *ItemRepository {
-	return &ItemRepository{db: db}
+func NewItemRepository(db *gorm.DB) ItemRepository {
+	return &itemRepository{db: db}
 }
 
-func (r *ItemRepository) Create(item *models.Item) error {
+func (r *itemRepository) Create(item *models.Item) error {
 	return r.db.Create(item).Error
 }
 
-func (r *ItemRepository) FindByID(id uint) (*models.Item, error) {
+func (r *itemRepository) FindByID(id uint) (*models.Item, error) {
 	var item models.Item
 
 	err := r.db.Preload("Extension").Preload("Type").Preload("Language").

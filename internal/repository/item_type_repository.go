@@ -5,15 +5,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type ItemTypeRepository struct {
+type itemTypeRepository struct {
 	db *gorm.DB
 }
 
-func NewItemTypeRepository(db *gorm.DB) *ItemTypeRepository {
-	return &ItemTypeRepository{db: db}
+func NewItemTypeRepository(db *gorm.DB) ItemTypeRepository {
+	return &itemTypeRepository{db: db}
 }
 
-func (r *ItemTypeRepository) FindByName(name string) (*models.ItemType, error) {
+func (r *itemTypeRepository) FindByName(name string) (*models.ItemType, error) {
 	var itemType models.ItemType
 
 	err := r.db.Where("name = ?", name).First(&itemType).Error

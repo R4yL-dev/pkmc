@@ -2,35 +2,34 @@ package repository
 
 import "gorm.io/gorm"
 
-type UnitOfWork struct {
+type unitOfWork struct {
 	db *gorm.DB
 	tx *gorm.DB
 }
 
-func NewUnitOfWork(db *gorm.DB) *UnitOfWork {
-	return &UnitOfWork{db: db}
+func NewUnitOfWork(db *gorm.DB) UnitOfWork {
+	return &unitOfWork{db: db}
 }
 
-func (u *UnitOfWork) Begin() error {
-	u.tx = u.db.Begin()
-	return u.tx.Error
-}
-
-func (u *UnitOfWork) Commit() error {
-	if u.tx == nil {
-		return nil
+func (u *unitOfWork) Do(fn func(uow UnitOfWork) error) error {
+	tx := u.db.Begin()
+	if tx.Error != nil {
+		return tx.Error
 	}
-	return u.tx.Commit().Error
-}
 
-func (u *UnitOfWork) Rollback() error {
-	if u.tx == nil {
-		return nil
+	txUoW := &unitOfWork{
+		db: u.db,
+		tx: tx,
 	}
-	return u.tx.Rollback().Error
+
+	if err := fn(txUoW); err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }
 
-func (u *UnitOfWork) Items() *ItemRepository {
+func (u *unitOfWork) Items() ItemRepository {
 	db := u.db
 
 	if u.tx != nil {
@@ -39,7 +38,7 @@ func (u *UnitOfWork) Items() *ItemRepository {
 	return NewItemRepository(db)
 }
 
-func (u *UnitOfWork) Extensions() *ExtensionRepository {
+func (u *unitOfWork) Extensions() ExtensionRepository {
 	db := u.db
 
 	if u.tx != nil {
@@ -48,7 +47,7 @@ func (u *UnitOfWork) Extensions() *ExtensionRepository {
 	return NewExtensionRepository(db)
 }
 
-func (u *UnitOfWork) Languages() *LanguageRepository {
+func (u *unitOfWork) Languages() LanguageRepository {
 	db := u.db
 
 	if u.tx != nil {
@@ -57,15 +56,11 @@ func (u *UnitOfWork) Languages() *LanguageRepository {
 	return NewLanguageRepository(db)
 }
 
-func (u *UnitOfWork) ItemTypes() *ItemTypeRepository {
+func (u *unitOfWork) ItemTypes() ItemTypeRepository {
 	db := u.db
 
 	if u.tx != nil {
 		db = u.tx
 	}
 	return NewItemTypeRepository(db)
-}
-
-func WithTransaction(db *gorm.DB, fn func(*gorm.DB) error) error {
-	return db.Transaction(fn)
 }
