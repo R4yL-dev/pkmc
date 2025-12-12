@@ -25,7 +25,7 @@ var (
 
 func NewDBError(op string, cause error, path ...string) *DBError {
 	dbErr := &DBError{
-		BaseError: NewBaseError("database", op, "", cause),
+		BaseError: NewBaseError(op, "database", "", cause),
 	}
 	if len(path) > 0 {
 		dbErr.Path = path[0]
