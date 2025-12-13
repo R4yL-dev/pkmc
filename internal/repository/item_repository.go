@@ -2,7 +2,10 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"strconv"
 
+	customErr "github.com/R4yL-dev/pkmc/internal/errors"
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"gorm.io/gorm"
 )
@@ -16,7 +19,15 @@ func NewItemRepository(db *gorm.DB) ItemRepository {
 }
 
 func (r *itemRepository) Create(ctx context.Context, item *models.Item) error {
-	return r.db.WithContext(ctx).Create(item).Error
+	err := r.db.WithContext(ctx).Create(item).Error
+	if err != nil {
+		key := "new"
+		if item.ID != 0 {
+			key = strconv.Itoa(int(item.ID))
+		}
+		return customErr.NewRepositoryError("create", "item", key, err)
+	}
+	return nil
 }
 
 func (r *itemRepository) FindByID(ctx context.Context, id uint) (*models.Item, error) {
@@ -24,8 +35,12 @@ func (r *itemRepository) FindByID(ctx context.Context, id uint) (*models.Item, e
 
 	err := r.db.WithContext(ctx).Preload("Extension").Preload("Type").Preload("Language").
 		First(&item, id).Error
+
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, customErr.NewRepositoryError("find", "item", strconv.Itoa(int(id)), customErr.ErrEntityNotFound)
+		}
+		return nil, customErr.NewRepositoryError("find", "item", strconv.Itoa(int(id)), err)
 	}
 	return &item, nil
 }
