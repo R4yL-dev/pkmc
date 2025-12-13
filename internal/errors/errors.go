@@ -11,9 +11,15 @@ type BaseError struct {
 
 func (e BaseError) Error() string {
 	if e.Cause != nil {
-		return fmt.Sprintf("%s %s failed: %s (%v)", e.Domain, e.Op, e.Message, e.Cause)
+		if e.Message != "" {
+			return fmt.Sprintf("%s %s failed: %s (%v)", e.Domain, e.Op, e.Message, e.Cause)
+		}
+		return fmt.Sprintf("%s %s failed: %v", e.Domain, e.Op, e.Cause)
 	}
-	return fmt.Sprintf("%s %s failed: %s", e.Domain, e.Op, e.Message)
+	if e.Message != "" {
+		return fmt.Sprintf("%s %s failed: %s", e.Domain, e.Op, e.Message)
+	}
+	return fmt.Sprintf("%s %s failed", e.Domain, e.Op)
 }
 
 func (e BaseError) Unwrap() error {
