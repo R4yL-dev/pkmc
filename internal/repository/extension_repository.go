@@ -19,7 +19,7 @@ func NewExtensionRepository(db *gorm.DB) ExtensionRepository {
 func (r *extensionRepository) FindByCode(ctx context.Context, code string) (*models.Extension, error) {
 	var ext models.Extension
 
-	err := r.db.WithContext(ctx).Where("code = ?", code).First(&ext).Error
+	err := r.db.WithContext(ctx).Preload("Block").Where("code = ?", code).First(&ext).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, customErr.NewRepositoryError("find", "extension", code, customErr.ErrEntityNotFound)
