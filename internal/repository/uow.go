@@ -62,6 +62,15 @@ func (u *unitOfWork) Languages() LanguageRepository {
 	return NewLanguageRepository(db)
 }
 
+func (u *unitOfWork) Blocks() BlockRepository {
+	db := u.db
+
+	if u.tx != nil {
+		db = u.tx
+	}
+	return NewBlockRepository(db)
+}
+
 func (u *unitOfWork) ItemTypes() ItemTypeRepository {
 	db := u.db
 

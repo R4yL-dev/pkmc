@@ -23,10 +23,15 @@ type ItemTypeRepository interface {
 	FindByName(ctx context.Context, name string) (*models.ItemType, error)
 }
 
+type BlockRepository interface {
+	FindByCode(ctx context.Context, code string) (*models.Block, error)
+}
+
 type UnitOfWork interface {
 	Do(ctx context.Context, fn func(uow UnitOfWork) error) error
 	Items() ItemRepository
 	Extensions() ExtensionRepository
 	Languages() LanguageRepository
 	ItemTypes() ItemTypeRepository
+	Blocks() BlockRepository
 }
