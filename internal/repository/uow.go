@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	customErr "github.com/R4yL-dev/pkmc/internal/errors"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +20,7 @@ func NewUnitOfWork(db *gorm.DB) UnitOfWork {
 func (u *unitOfWork) Do(ctx context.Context, fn func(uow UnitOfWork) error) error {
 	tx := u.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
-		return tx.Error
+		return customErr.NewUOWError("begin", tx.Error)
 	}
 
 	txUoW := &unitOfWork{
@@ -32,7 +33,11 @@ func (u *unitOfWork) Do(ctx context.Context, fn func(uow UnitOfWork) error) erro
 		tx.Rollback()
 		return err
 	}
-	return tx.Commit().Error
+
+	if err := tx.Commit().Error; err != nil {
+		return customErr.NewUOWError("commit", err)
+	}
+	return nil
 }
 
 func (u *unitOfWork) Items() ItemRepository {
