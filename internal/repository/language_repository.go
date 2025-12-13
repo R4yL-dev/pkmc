@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"errors"
 
+	customErr "github.com/R4yL-dev/pkmc/internal/errors"
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"gorm.io/gorm"
 )
@@ -20,7 +22,10 @@ func (r *languageRepository) FindByCode(ctx context.Context, code string) (*mode
 
 	err := r.db.WithContext(ctx).Where("code = ?", code).First(&lang).Error
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, customErr.NewRepositoryError("find", "language", code, customErr.ErrEntityNotFound)
+		}
+		return nil, customErr.NewRepositoryError("find", "language", code, err)
 	}
 	return &lang, nil
 }
