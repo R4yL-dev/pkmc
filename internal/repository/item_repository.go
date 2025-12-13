@@ -33,7 +33,10 @@ func (r *itemRepository) Create(ctx context.Context, item *models.Item) error {
 func (r *itemRepository) FindByID(ctx context.Context, id uint) (*models.Item, error) {
 	var item models.Item
 
-	err := r.db.WithContext(ctx).Preload("Extension").Preload("Type").Preload("Language").
+	err := r.db.WithContext(ctx).
+		Preload("Extension.Block").
+		Preload("Type").
+		Preload("Language").
 		First(&item, id).Error
 
 	if err != nil {
