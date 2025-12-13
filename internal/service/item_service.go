@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	customErr "github.com/R4yL-dev/pkmc/internal/errors"
 	"github.com/R4yL-dev/pkmc/internal/models"
 	"github.com/R4yL-dev/pkmc/internal/repository"
 )
@@ -22,17 +23,17 @@ func (s *itemService) CreateItem(ctx context.Context, extCode, langCode, typeNam
 	err := s.uow.Do(ctx, func(uow repository.UnitOfWork) error {
 		ext, err := uow.Extensions().FindByCode(ctx, extCode)
 		if err != nil {
-			return fmt.Errorf("extension '%s' not found: %w", extCode, err)
+			return customErr.NewServiceError("create_item", "item_service", fmt.Sprintf("extension '%s' not found", extCode), err)
 		}
 
 		lang, err := uow.Languages().FindByCode(ctx, langCode)
 		if err != nil {
-			return fmt.Errorf("language '%s' not found: %w", langCode, err)
+			return customErr.NewServiceError("create_item", "item_service", fmt.Sprintf("language '%s' not found", langCode), err)
 		}
 
 		itemType, err := uow.ItemTypes().FindByName(ctx, typeName)
 		if err != nil {
-			return fmt.Errorf("item type '%s' not found: %w", typeName, err)
+			return customErr.NewServiceError("create_item", "item_service", fmt.Sprintf("item type '%s' not found", typeName), err)
 		}
 
 		item := &models.Item{
@@ -43,12 +44,12 @@ func (s *itemService) CreateItem(ctx context.Context, extCode, langCode, typeNam
 		}
 
 		if err := uow.Items().Create(ctx, item); err != nil {
-			return fmt.Errorf("failed to create item: %w", err)
+			return customErr.NewServiceError("create_item", "item_service", "failed to create item", err)
 		}
 
 		createdItem, err = uow.Items().FindByID(ctx, item.ID)
 		if err != nil {
-			return fmt.Errorf("failed to load created item: %w", err)
+			return customErr.NewServiceError("create_item", "item_service", "failed to load created item", err)
 		}
 
 		return nil
